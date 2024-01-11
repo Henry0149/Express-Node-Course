@@ -2,6 +2,8 @@ const express = require('express');
 const tourRouter = require('./routes/tour_routes');
 const userRouter = require('./routes/user_routes');
 const morgan = require('morgan');
+const AppError = require('./utils/app_error');
+const errorFunction = require('./controllers/error_controller');
 
 const app = express();
 
@@ -16,10 +18,10 @@ app.use(express.static(`${__dirname}/public`));
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
-module.exports = app;
+//router handler
+app.all('*', (req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl} on server`, 404));
+});
 
-//custom middleware
-// app.use((req, res, next) => {
-//   console.log('Hello from the middleware');
-//   next();
-// });
+app.use(errorFunction);
+module.exports = app;
