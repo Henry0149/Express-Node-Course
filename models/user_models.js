@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please Provide a password'],
     type: String,
     minlength: [10, 'Password must have a length of 10'],
+    select: false,
   },
   confirmPassword: {
     required: [true, 'Please Confirm your password'],
@@ -34,6 +35,7 @@ const userSchema = new mongoose.Schema({
       },
     },
   },
+  passwordChangedAt: Date,
 });
 
 userSchema.pre('save', async function (next) {
@@ -43,10 +45,27 @@ userSchema.pre('save', async function (next) {
   //hash the password
   this.password = await bcrypt.hash(this.password, 12);
 
-  //deletes the user
   this.confirmPassword = undefined;
   next();
 });
+
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changesTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return JWTTimestamp < changesTimeStamp;
+  }
+  return false;
+};
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

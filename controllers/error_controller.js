@@ -1,5 +1,7 @@
 const AppError = require('../utils/app_error');
 
+const handleJWTError = (err) => new AppError('Invalid Token', 401);
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -42,6 +44,7 @@ module.exports = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     if (err.name === 'CastError') err = handleCastError(err);
     if (err.code === 11000) err = handleDuplicateFields(err);
+    if (err.name === 'JsonWebTokenError') err = handleJWTError(err);
     sendErrorProd(err, res);
   }
 };
