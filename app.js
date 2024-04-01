@@ -7,6 +7,7 @@ const errorFunction = require('./controllers/error_controller');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
+const reviewRouter = require('./routes/review_routes');
 // const xss = require('xss-clean');
 
 const app = express();
@@ -39,6 +40,7 @@ app.use(express.static(`${__dirname}/public`));
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 //router handler
 app.all('*', (req, res, next) => {
