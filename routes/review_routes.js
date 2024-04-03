@@ -2,7 +2,7 @@ const reviewController = require('./../controllers/review_controller');
 const express = require('express');
 const authController = require('./../controllers/authentication_controller');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router
   .route('/')
@@ -12,4 +12,6 @@ router
     authController.restrict('user'),
     reviewController.createReview
   );
+
+router.route('/:id').delete(reviewController.deleteReview);
 module.exports = router;

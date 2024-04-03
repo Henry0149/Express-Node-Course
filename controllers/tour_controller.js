@@ -2,6 +2,7 @@ const AppError = require('../utils/app_error');
 const Tour = require('./../models/tour_models');
 const APIFeatures = require('./../utils/api_features');
 const catchAsync = require('./../utils/catch_async');
+const factory = require('./../controllers/handler_factory');
 
 exports.getAllTours = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(Tour.find(), req.query)
@@ -19,10 +20,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id).populate({
-    path: 'guides',
-    select: '-__v -passwordChangedAt',
-  });
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   if (!tour) {
     return next(new AppError('No Tour Found with that ID', 404));
   }
@@ -45,22 +43,7 @@ exports.createTour = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!tour) {
-    return next(new AppError('No Tour Found with that ID', 404));
-  }
-  res.status(200).json({
-    success: true,
-    data: {
-      tour: tour,
-    },
-  });
-});
+exports.updateTour = factory.updateOne(Tour);
 
 exports.getTourStats = catchAsync(async (req, res, next) => {
   const stats = await Tour.aggregate([
@@ -88,19 +71,20 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
     },
   });
 });
-exports.deleteTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
+exports.deleteTour = factory.deleteOne(Tour);
+//  catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
 
-  if (!tour) {
-    return next(new AppError('No tour found with that ID', 404));
-  }
+//   if (!tour) {
+//     return next(new AppError('No tour found with that ID', 404));
+//   }
 
-  res.status(204).json({
-    status: 'success',
-    message: 'Tour Deleted Successfully',
-    data: null,
-  });
-});
+//   res.status(204).json({
+//     status: 'success',
+//     message: 'Tour Deleted Successfully',
+//     data: null,
+//   });
+// });
 
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
