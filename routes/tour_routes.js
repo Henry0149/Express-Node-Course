@@ -15,6 +15,11 @@ router
   .get(authController.protect, tourController.getAllTours)
   .post(tourController.createTour);
 
+router.route('/distance/:latlng/unit/:unit').get(tourController.getDistance);
+
+router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithIn);
 router
   .route('/:id')
   .get(tourController.getTour)

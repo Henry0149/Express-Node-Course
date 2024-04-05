@@ -25,23 +25,15 @@ exports.getTour = catchAsync(async (req, res, next) => {
     return next(new AppError('No Tour Found with that ID', 404));
   }
   res.status(200).json({
-    succes: true,
+    success: true,
     data: {
       tour: tour,
     },
   });
+  next();
 });
 
-exports.createTour = catchAsync(async (req, res, next) => {
-  const newTour = await Tour.create(req.body);
-
-  res.status(201).json({
-    success: true,
-    data: {
-      tour: newTour,
-    },
-  });
-});
+exports.createTour = factory.createOne(Tour);
 
 exports.updateTour = factory.updateOne(Tour);
 
@@ -72,19 +64,6 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
   });
 });
 exports.deleteTour = factory.deleteOne(Tour);
-//  catchAsync(async (req, res, next) => {
-//   const tour = await Tour.findByIdAndDelete(req.params.id);
-
-//   if (!tour) {
-//     return next(new AppError('No tour found with that ID', 404));
-//   }
-
-//   res.status(204).json({
-//     status: 'success',
-//     message: 'Tour Deleted Successfully',
-//     data: null,
-//   });
-// });
 
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
@@ -124,5 +103,68 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: { plan },
+  });
+});
+
+exports.getToursWithIn = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+
+  const [lat, lng] = latlng.split(',');
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng) {
+    next(new AppError('Please provide latlng in the correct format'), 400);
+  }
+
+  const tour = await Tour.find({
+    startLocation: {
+      $geoWithin: { $centerSphere: [[lng, lat], radius] },
+    },
+  });
+  console.log(distance, lat, lng, unit);
+
+  res.status(200).json({
+    success: true,
+    results: tour.length,
+    data: tour,
+  });
+});
+
+exports.getDistance = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  if (!lat || !lng) {
+    console.log('Error on Apperror');
+    return next(
+      new AppError('Please provide latlng in the correct format'),
+      400
+    );
+  }
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  const distance = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+  console.log(distance);
+
+  res.status(200).json({
+    success: true,
+    data: { distance },
   });
 });

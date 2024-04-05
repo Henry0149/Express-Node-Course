@@ -8,7 +8,6 @@ exports.deleteOne = (Model) =>
     if (!doc) {
       return next(new AppError('No document found with that ID', 404));
     }
-
     res.status(204).json({
       status: 'success',
       message: 'Tour Deleted Successfully',
@@ -30,6 +29,18 @@ exports.updateOne = (Model) =>
       success: true,
       data: {
         doc,
+      },
+    });
+  });
+
+exports.createOne = (Model) =>
+  catchAsync(async (req, res, next) => {
+    const newDoc = await Model.create(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        data: newDoc,
       },
     });
   });

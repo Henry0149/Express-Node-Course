@@ -103,6 +103,8 @@ tourSchema.virtual('reviews', {
   localField: '_id',
 });
 
+tourSchema.index({ startLocation: '2dsphere' });
+
 // Document Middleware: runs before .save() and .created()
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
